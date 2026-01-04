@@ -133,31 +133,41 @@ class GenerationPipeline:
         # Decode input image
         image = decode_image(request.prompt_image)
 
-        # 1. Edit the image using Qwen Edit
+        # V2 EXPERIMENT: Double background removal (BEFORE and AFTER Qwen)
+        # Step 0: Remove background from original image FIRST
+        logger.info("V2: Pre-Qwen background removal")
+        image_clean = self.rmbg.remove_background(image)
+
+        # Step 1: Edit the CLEAN image using Qwen Edit (left view)
+        logger.info("V2: Qwen Edit view 1/3 (left)")
         image_edited = self.qwen_edit.edit_image(
-            prompt_image=image,
+            prompt_image=image_clean,
             seed=request.seed,
-            prompt="Show this object in left three-quarters view and make sure it is fully visible. Turn background neutral solid color contrasting with an object. Delete background details. Delete watermarks. Keep object colors. Sharpen image details",
+            prompt="Show this object in left three-quarters view and make sure it is fully visible. Keep transparent background. Delete watermarks. Keep object colors. Sharpen image details",
         )
 
-        # 2. Remove background
+        # Step 2: Remove background AGAIN after Qwen (cleanup any artifacts)
         image_without_background = self.rmbg.remove_background(image_edited)
 
-        # add another view of the image
+        # View 2: right three-quarters
+        logger.info("V2: Qwen Edit view 2/3 (right)")
         image_edited_2 = self.qwen_edit.edit_image(
-            prompt_image=image,
+            prompt_image=image_clean,
             seed=request.seed,
-            prompt="Show this object in right three-quarters view and make sure it is fully visible. Turn background neutral solid color contrasting with an object. Delete background details. Delete watermarks. Keep object colors. Sharpen image details",
+            prompt="Show this object in right three-quarters view and make sure it is fully visible. Keep transparent background. Delete watermarks. Keep object colors. Sharpen image details",
         )
         image_without_background_2 = self.rmbg.remove_background(image_edited_2)
 
-        # add another view of the image
+        # View 3: back
+        logger.info("V2: Qwen Edit view 3/3 (back)")
         image_edited_3 = self.qwen_edit.edit_image(
-            prompt_image=image,
+            prompt_image=image_clean,
             seed=request.seed,
-            prompt="Show this object in back view and make sure it is fully visible. Turn background neutral solid color contrasting with an object. Delete background details. Delete watermarks. Keep object colors. Sharpen image details",
+            prompt="Show this object in back view and make sure it is fully visible. Keep transparent background. Delete watermarks. Keep object colors. Sharpen image details",
         )
         image_without_background_3 = self.rmbg.remove_background(image_edited_3)
+        
+        logger.success("V2: Double RMBG pipeline complete")
 
         # save to debug
         # image_edited.save("image_edited.png")

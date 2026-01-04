@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 config_dir = Path(__file__).parent
 
 class Settings(BaseSettings):
-    api_title: str = "3D Generation pipeline Service"
+    api_title: str = "3D Generation pipeline Service V2 - Double RMBG + More Steps"
 
     # API settings
     host: str = "0.0.0.0"
@@ -26,11 +26,11 @@ class Settings(BaseSettings):
     send_generated_files: bool = Field(default=False, env="SEND_GENERATED_FILES")
     output_dir: Path = Field(default=Path("generated_outputs"), env="OUTPUT_DIR")
 
-    # Trellis settings
+    # Trellis settings - V2: MORE STEPS for better geometry and textures
     trellis_model_id: str = Field(default="jetx/trellis-image-large", env="TRELLIS_MODEL_ID")
-    trellis_sparse_structure_steps: int = Field(default=8, env="TRELLIS_SPARSE_STRUCTURE_STEPS")
+    trellis_sparse_structure_steps: int = Field(default=12, env="TRELLIS_SPARSE_STRUCTURE_STEPS")  # 8→12 for better structure
     trellis_sparse_structure_cfg_strength: float = Field(default=5.75, env="TRELLIS_SPARSE_STRUCTURE_CFG_STRENGTH")
-    trellis_slat_steps: int = Field(default=20, env="TRELLIS_SLAT_STEPS")
+    trellis_slat_steps: int = Field(default=25, env="TRELLIS_SLAT_STEPS")  # 20→25 for better textures
     trellis_slat_cfg_strength: float = Field(default=2.4, env="TRELLIS_SLAT_CFG_STRENGTH")
     trellis_num_oversamples: int = Field(default=3, env="TRELLIS_NUM_OVERSAMPLES")
     compression: bool = Field(default=False, env="COMPRESSION")
